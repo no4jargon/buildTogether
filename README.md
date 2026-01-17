@@ -39,6 +39,19 @@ npm run dev
 
 Magic links are printed to the server console. Visit the link to sign in. No paid email provider is required in development.
 
+### Email provider configuration
+
+To send real magic links, configure SMTP credentials (for example, from a transactional email provider). The app uses NextAuth's email provider and `nodemailer`.
+
+Required environment variables:
+
+- `EMAIL_FROM` — the verified sender address
+- `SMTP_HOST` — SMTP server hostname
+- `SMTP_PORT` — SMTP server port (typically 587)
+- `SMTP_USER` — SMTP username
+- `SMTP_PASS` — SMTP password
+- `SMTP_SECURE` — set to `true` for port 465, otherwise `false`
+
 ## Switching between SQLite and Postgres
 
 - **SQLite (default):** uses `prisma/schema.prisma` and `DATABASE_URL="file:./dev.db"`.
