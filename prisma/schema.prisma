@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum maturity_stage {
+  idea
+  active
+  validation
+  paused
+  archived
+}
+
+enum privacy {
+  public
+  restricted
+  private
+}
+
+enum action_status {
+  open
+  in_progress
+  done
+}
+
+enum interest_status {
+  submitted
+  accepted
+  follow_up
+  declined
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  name          String   @default("")
+  bio           String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  experimentsCreated Experiment[] @relation("ExperimentCreator")
+  scopesOwned        ExperimentScope[]
+  statusLogs         ExperimentStatusLog[]
+  contributions      ExperimentContributor[]
+  actionItemsOwned   ActionItem[] @relation("ActionOwner")
+  actionItemsCreated ActionItem[] @relation("ActionCreator")
+  journals           ContributorJournal[]
+  assets             ReusableAsset[]
+  interestRequests   InterestRequest[]
+  decisions          InterestRequest[] @relation("DecisionOwner")
+
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+model Experiment {
+  id                   String   @id @default(uuid())
+  publicId             String   @unique @map("public_id")
+  title                String
+  problemStatement     String   @map("problem_statement")
+  solutionDirection    String   @map("solution_direction")
+  hypothesis           String?
+  falsificationCriteria String? @map("falsification_criteria")
+  maturityStage        maturity_stage @map("maturity_stage")
+  privacy              privacy
+  createdByUserId      String @map("created_by_user_id")
+  currentStatus        String @default("") @map("current_status")
+  lastActivityAt       DateTime @default(now()) @map("last_activity_at")
+  startDate            DateTime? @map("start_date")
+  reviewDate           DateTime? @map("review_date")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  creator User @relation("ExperimentCreator", fields: [createdByUserId], references: [id])
+  scopes ExperimentScope[]
+  statusLogs ExperimentStatusLog[]
+  contributors ExperimentContributor[]
+  actionItems ActionItem[]
+  journals ContributorJournal[]
+  assets ReusableAsset[]
+  interestRequests InterestRequest[]
+
+  @@map("experiments")
+}
+
+model ExperimentScope {
+  id           String @id @default(uuid())
+  experimentId String @map("experiment_id")
+  scopeKey     String @map("scope_key")
+  scopeLabel   String @map("scope_label")
+  ownerUserId  String @map("owner_user_id")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  owner User @relation(fields: [ownerUserId], references: [id])
+
+  @@unique([experimentId, scopeKey])
+  @@map("experiment_scopes")
+}
+
+model ExperimentStatusLog {
+  id           String   @id @default(uuid())
+  experimentId String   @map("experiment_id")
+  authorUserId String   @map("author_user_id")
+  entry        String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorUserId], references: [id])
+
+  @@map("experiment_status_logs")
+}
+
+model ExperimentContributor {
+  id           String   @id @default(uuid())
+  experimentId String   @map("experiment_id")
+  userId       String   @map("user_id")
+  role         String
+  weeklyHours  Decimal  @db.Decimal(4, 1) @map("weekly_hours")
+  personalRisk String?  @map("personal_risk")
+  joinedAt     DateTime @default(now()) @map("joined_at")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([experimentId, userId])
+  @@map("experiment_contributors")
+}
+
+model ActionItem {
+  id             String   @id @default(uuid())
+  experimentId   String   @map("experiment_id")
+  description    String
+  ownerUserId    String?  @map("owner_user_id")
+  status         action_status @default(open)
+  createdByUserId String @map("created_by_user_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  owner User? @relation("ActionOwner", fields: [ownerUserId], references: [id])
+  creator User @relation("ActionCreator", fields: [createdByUserId], references: [id])
+
+  @@map("action_items")
+}
+
+model ContributorJournal {
+  id             String   @id @default(uuid())
+  experimentId   String   @map("experiment_id")
+  userId         String   @map("user_id")
+  weekStartDate  DateTime @map("week_start_date")
+  workedOn       String   @default("") @map("worked_on")
+  learned        String   @default("")
+  blockers       String   @default("")
+  assetsCreated  String   @default("") @map("assets_created")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([experimentId, userId, weekStartDate])
+  @@map("contributor_journals")
+}
+
+model ReusableAsset {
+  id             String   @id @default(uuid())
+  experimentId   String   @map("experiment_id")
+  createdByUserId String @map("created_by_user_id")
+  assetType      String   @map("asset_type")
+  title          String
+  url            String?
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  creator User @relation(fields: [createdByUserId], references: [id])
+
+  @@map("reusable_assets")
+}
+
+model InterestRequest {
+  id                   String   @id @default(uuid())
+  experimentId         String   @map("experiment_id")
+  userId               String   @map("user_id")
+  why                  String
+  weekOnePlan          String   @map("week_one_plan")
+  weeklyHours          Decimal  @db.Decimal(4, 1) @map("weekly_hours")
+  status               interest_status @default(submitted)
+  decisionOwnerUserId  String?  @map("decision_owner_user_id")
+  decisionNote         String?  @map("decision_note")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
+
+  experiment Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  decisionOwner User? @relation("DecisionOwner", fields: [decisionOwnerUserId], references: [id])
+
+  @@unique([experimentId, userId])
+  @@map("interest_requests")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
