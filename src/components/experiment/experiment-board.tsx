@@ -11,6 +11,7 @@ export type ExperimentListItem = {
   problemStatement: string;
   maturityStage: string;
   lastActivityAt: string;
+  isBookmarked?: boolean;
 };
 
 type Props = {

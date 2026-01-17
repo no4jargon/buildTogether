@@ -28,7 +28,7 @@ export const GET = async (
     ? await prisma.user.findUnique({ where: { id: session.user.id } })
     : null;
 
-  const experiment = await findExperimentByPublicId(params.public_id);
+  const experiment = await findExperimentByPublicId(params.public_id, user?.id);
   if (!experiment) {
     return jsonError('not_found', 'Experiment not found', 404);
   }
@@ -66,7 +66,8 @@ export const GET = async (
       lastActivityAt: experiment.lastActivityAt,
       createdByUserId: experiment.createdByUserId,
       startDate: experiment.startDate,
-      reviewDate: experiment.reviewDate
+      reviewDate: experiment.reviewDate,
+      isBookmarked: Boolean(experiment.bookmarks?.length)
     },
     scopes: experiment.scopes,
     contributors: experiment.contributors,

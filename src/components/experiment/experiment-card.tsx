@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { BookmarkButton } from './bookmark-button';
 
 type ExperimentSummary = {
   publicId: string;
@@ -10,6 +11,7 @@ type ExperimentSummary = {
   problemStatement: string;
   maturityStage: string;
   lastActivityAt: string;
+  isBookmarked?: boolean;
 };
 
 type Props = {
@@ -30,7 +32,13 @@ export const ExperimentCard = ({ experiment, hrefPrefix = '' }: Props) => {
         >
           {experiment.title}
         </Link>
-        <Badge>{experiment.maturityStage}</Badge>
+        <div className="flex items-center gap-2">
+          <BookmarkButton
+            publicId={experiment.publicId}
+            initialBookmarked={experiment.isBookmarked}
+          />
+          <Badge>{experiment.maturityStage}</Badge>
+        </div>
       </div>
       <p className="text-sm text-slate-300">
         {experiment.problemStatement}
