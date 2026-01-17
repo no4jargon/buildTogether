@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { BookmarkMarquee } from '@/components/experiment/bookmark-marquee';
+
 const manifesto = [
   'Most people who want to build something new do not fail because they lack ideas, skill, or intent.',
   'They fail because building something new introduces risk. Risk to income, to time, to relationships, to self image. Choosing stability in the face of that risk is rational.',
@@ -44,6 +46,7 @@ export default function LandingPage() {
             View public experiments
           </Link>
         </div>
+        <BookmarkMarquee />
         <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-900/40 p-6 text-slate-200">
           <h2 className="text-xl font-semibold text-white">Manifesto</h2>
           {manifesto.map((line) => (
