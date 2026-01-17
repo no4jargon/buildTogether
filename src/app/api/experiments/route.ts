@@ -95,7 +95,15 @@ export const GET = async (request: NextRequest) => {
       ...cursorFilter
     },
     orderBy: [{ lastActivityAt: 'desc' }, { id: 'desc' }],
-    take
+    take,
+    include: userId
+      ? {
+          bookmarks: {
+            where: { userId },
+            select: { id: true }
+          }
+        }
+      : undefined
   });
 
   const nextCursor = items.length === take ? encodeCursor(items[items.length - 1]) : null;
@@ -106,7 +114,8 @@ export const GET = async (request: NextRequest) => {
       title: item.title,
       problemStatement: item.problemStatement,
       maturityStage: item.maturityStage,
-      lastActivityAt: item.lastActivityAt
+      lastActivityAt: item.lastActivityAt,
+      isBookmarked: Boolean(item.bookmarks?.length)
     })),
     nextCursor
   });

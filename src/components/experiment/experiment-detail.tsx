@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { ActionItems } from './action-items';
 import { Assets } from './assets';
+import { BookmarkButton } from './bookmark-button';
 import { Contributors } from './contributors';
 import { JournalEditor } from './journal-editor';
 import { JoinRequestPanel } from './join-request-panel';
@@ -32,6 +33,7 @@ export type ExperimentDetailPayload = {
     createdByUserId: string;
     startDate: string | null;
     reviewDate: string | null;
+    isBookmarked: boolean;
   };
   scopes: Array<{
     scopeKey: string;
@@ -147,14 +149,20 @@ export const ExperimentDetail = ({ publicId, showJoinLink }: Props) => {
             Last activity {new Date(experiment.lastActivityAt).toLocaleString()}
           </p>
         </div>
-        {showJoinLink && !data.isContributor && (
-          <Link
-            className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200"
-            href={`/app/experiments/${publicId}/join`}
-          >
-            Work with this community
-          </Link>
-        )}
+        <div className="flex items-center gap-3">
+          <BookmarkButton
+            publicId={publicId}
+            initialBookmarked={experiment.isBookmarked}
+          />
+          {showJoinLink && !data.isContributor && (
+            <Link
+              className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-200"
+              href={`/app/experiments/${publicId}/join`}
+            >
+              Work with this community
+            </Link>
+          )}
+        </div>
       </div>
 
       <section className="space-y-4 rounded-xl border border-slate-800 bg-slate-900/40 p-6">
