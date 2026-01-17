@@ -35,7 +35,7 @@ export default function LandingPage() {
         <div className="flex flex-wrap gap-4">
           <Link
             className="rounded-md bg-sky-500 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-400"
-            href="/api/auth/signin"
+            href="/signin"
           >
             Sign in
           </Link>
